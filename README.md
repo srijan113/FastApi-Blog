@@ -5,6 +5,7 @@ Learning Fast and creating Blogging web application with JWT Authentication.
 Steps:
 
 1. Project Setup
+    
     a. Create all the files like main.py, gitignore, and ofcourse venv in you project root folder
 
 2. Create a seperate app, in this case a folder and name it according to its function or application
@@ -24,6 +25,7 @@ FastApiBlog
 ```
 
 3. Then create a path/router and schemas for the blog application
+    
     a. Create a file inside blog/ with name `schemas.py` and inside create a schema
 
         from pydantic import BaseModel
@@ -81,3 +83,26 @@ FastApiBlog
         from . import database, models
 
         models.Base.metadata.create_all(bind=database.engine)
+
+5. Creating Blogs objects
+
+    a. Inside of `main.py` file there is router for creating blogs of inside that router we have to define the db that we want to use writing payload. That functions takes request send by user and db info.
+
+        def get_db():
+            db = database.SessionLocal()
+            try:
+                yield db
+            finally:
+                db.close()
+
+        @app.post('/blog')
+        def create(request: schemas.BlogSchemas, db: Session = Depends(get_db)):
+            new_blog = models.BlogModel(title=request.title, body=request.body)
+            db.add(new_blog)
+            db.commit()
+            db.refresh(new_blog)
+            return new_blog
+        
+    b. We have take all the request data and pass it through a BlogModel which will be use for mapping to db and validating then the validated data is added to the db using `db.add(obj)` then it is commited to db using 
+    `db.commit()` then we get the data from the database after commiting using refresh i.e. db.refresh(new_blog). Finally return the data as new_blog from the db table.
+
